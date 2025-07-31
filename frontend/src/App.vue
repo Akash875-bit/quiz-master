@@ -302,7 +302,7 @@ main {
   transition: all 0.3s ease;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   max-width: calc(100vw - 40px); /* Responsive width with margin */
-  width: auto;
+  width: 900px; /* Increased width for better spacing */
   min-width: 320px; /* Minimum for mobile */
   overflow: visible; /* Allow dropdown to overflow navbar */
 }
