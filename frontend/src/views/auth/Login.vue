@@ -2,12 +2,11 @@
   <div class="login-page">
     <div class="login-background"></div>
     <div class="container">
-      <div class="row justify-content-center align-items-center min-vh-100">
+      <div class="row justify-content-center align-items-center min-vh-100 auth-row">
         <div class="col-lg-5 col-md-7">
           <div class="login-card">
             <div class="login-header text-center mb-4">
               <div class="logo-container mb-3">
-                <img src="/quiz-logo.svg" alt="Quiz Master" height="48" class="me-2" />
                 <span class="logo-text">Quiz Master</span>
               </div>
               <h1 class="login-title">Welcome Back</h1>
@@ -152,6 +151,11 @@ export default {
   display: flex;
   align-items: center;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.auth-row {
+  padding-top: 100px !important;
+  padding-bottom: 2rem !important;
 }
 
 .login-background {
