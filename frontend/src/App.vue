@@ -36,45 +36,37 @@ const menuItems = computed(() => {
 
 const logout = async () => {
   try {
-    console.log('Logging out user...');
+    console.log('🔴 APP.VUE LOGOUT FUNCTION CALLED');
     
-   
-    store.dispatch('addNotification', {
-      type: 'info',
-      message: 'Logging you out...'
-    });
-    
- 
+    // Remove the duplicate "Logging you out..." notification
+    // The store action will handle the success notification
+    console.log('🔴 About to call store.dispatch(logout)');
     await store.dispatch('logout');
+    console.log('🔴 store.dispatch(logout) completed');
     
-   
     localStorage.removeItem('quiz_master_token');
     localStorage.removeItem('quiz_master_refresh_token');
     localStorage.removeItem('quiz_master_user');
     
-    
     store.dispatch('resetAuthHeader');
     
-    console.log('User logged out, redirecting to login page');
+    console.log('🔴 App.vue logout completed, redirecting to login page');
     
     setTimeout(() => {
       router.push({ name: 'login' });
     }, 300);
   } catch (error) {
-    console.error('Error during logout:', error);
-    
+    console.error('🔴 Error during logout:', error);
     
     store.dispatch('addNotification', {
       type: 'error',
       message: 'There was a problem logging out'
     });
     
-    
     localStorage.removeItem('quiz_master_token');
     localStorage.removeItem('quiz_master_refresh_token');
     localStorage.removeItem('quiz_master_user');
     store.dispatch('resetAuthHeader');
-    
     
     setTimeout(() => {
       router.push({ name: 'login' });
@@ -204,7 +196,7 @@ onUnmounted(() => {
                 <div class="user-avatar">
                   <i class="bi bi-person-circle"></i>
                 </div>
-                <span class="username">{{ user.username || 'User' }}</span>
+                <span class="username">{{ user.first_name && user.last_name ? `${user.first_name} ${user.last_name}` : user.username || 'User' }}</span>
                 <i class="bi bi-chevron-down dropdown-arrow" :class="{ 'rotated': showUserDropdown }"></i>
               </div>
               <div class="user-dropdown" v-if="showUserDropdown">
@@ -302,7 +294,7 @@ main {
   transition: all 0.3s ease;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   max-width: calc(100vw - 40px); /* Responsive width with margin */
-  width: 900px; /* Increased width for better spacing */
+  width: 1100px; /* Further increased width for Reports visibility */
   min-width: 320px; /* Minimum for mobile */
   overflow: visible; /* Allow dropdown to overflow navbar */
 }

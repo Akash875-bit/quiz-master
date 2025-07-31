@@ -261,38 +261,74 @@ const store = createStore({
       state.error = error
     },
     ADD_NOTIFICATION(state, notification) {
-      // Check for duplicate messages (prevent spam)
       const now = Date.now()
-      const existingNotification = state.notifications.find(n => 
-        n.message === notification.message && 
-        n.type === (notification.type || 'info') &&
-        (now - parseInt(n.id)) < 1000 // Prevent duplicates within 1 second
-      )
+      const messageText = notification.message
+      const notificationType = notification.type || 'info'
       
-      if (existingNotification) {
-        console.log('Duplicate notification prevented:', notification.message)
+      console.log('ADD_NOTIFICATION called with:', messageText, 'Type:', notificationType)
+      
+      // AGGRESSIVE duplicate prevention - prevent ANY duplicate message
+      const isDuplicate = state.notifications.some(n => {
+        const isSameMessage = n.message === messageText
+        const isSameType = n.type === notificationType
+        const isWithinTimeWindow = (now - parseInt(n.id)) < 10000 // 10 second window
+        
+        return isSameMessage && isSameType && isWithinTimeWindow
+      })
+      
+      if (isDuplicate) {
+        console.log('🚫 DUPLICATE NOTIFICATION BLOCKED:', messageText)
         return
       }
       
-      // Limit total notifications to prevent overflow
-      if (state.notifications.length >= 5) {
-        state.notifications.shift() // Remove oldest notification
+      // Special handling for logout messages - block ANY logout message if one exists
+      if (messageText.toLowerCase().includes('logged out') || messageText.toLowerCase().includes('logout')) {
+        const hasAnyLogoutMessage = state.notifications.some(n => {
+          const hasLogoutText = n.message.toLowerCase().includes('logged out') || n.message.toLowerCase().includes('logout')
+          const isRecent = (now - parseInt(n.id)) < 10000
+          return hasLogoutText && isRecent
+        })
+        
+        if (hasAnyLogoutMessage) {
+          console.log('🚫 LOGOUT NOTIFICATION BLOCKED (similar exists):', messageText)
+          return
+        }
       }
       
-      const id = now.toString()
-      state.notifications.push({
-        id,
-        message: notification.message,
-        type: notification.type || 'info',
-        timestamp: new Date()
-      })
+      // Limit to maximum 2 notifications at once
+      if (state.notifications.length >= 2) {
+        console.log('Removing oldest notification to make room')
+        state.notifications.shift()
+      }
       
+      // Generate unique ID with milliseconds + random to prevent collisions
+      const id = `${now}_${Math.random().toString(36).substr(2, 9)}`
+      const newNotification = {
+        id,
+        message: messageText,
+        type: notificationType,
+        timestamp: new Date()
+      }
+      
+      // Double-check that this ID doesn't already exist (shouldn't happen but just in case)
+      const existingById = state.notifications.find(n => n.id === id)
+      if (existingById) {
+        console.error('🚨 CRITICAL: Duplicate ID detected!', id)
+        return
+      }
+      
+      state.notifications.push(newNotification)
+      console.log('✅ NOTIFICATION ADDED:', messageText, 'ID:', id, 'Total notifications:', state.notifications.length)
+      console.log('📋 Current notification IDs:', state.notifications.map(n => n.id))
+      
+      // Auto-dismiss after 4 seconds
       setTimeout(() => {
         const index = state.notifications.findIndex(n => n.id === id)
         if (index !== -1) {
           state.notifications.splice(index, 1)
+          console.log('⏰ NOTIFICATION AUTO-DISMISSED:', messageText)
         }
-      }, 5000)
+      }, 4000)
     },
     CLEAR_NOTIFICATION(state, id) {
       const index = state.notifications.findIndex(n => n.id === id)
@@ -358,7 +394,7 @@ const store = createStore({
         
         commit('SET_LOADING', false)
         
-         this.dispatch('addNotification', {
+        commit('ADD_NOTIFICATION', {
           message: 'Registration successful! Please log in with your credentials.',
           type: 'success'
         })
@@ -372,30 +408,34 @@ const store = createStore({
     },
     
     async logout({ commit }) {
+      console.log('🚪 LOGOUT ACTION CALLED - Starting logout process')
       commit('SET_LOADING', true)
       
       try {
-        console.log('Executing logout action...');
+        console.log('🚪 Executing logout action - clearing auth state');
         
         commit('LOGOUT')
         
         delete axiosInstance.defaults.headers.common['Authorization'];
         
+        console.log('🚪 About to add logout success notification')
         commit('ADD_NOTIFICATION', {
           type: 'success',
           message: 'You have been logged out successfully'
         })
         
         commit('SET_LOADING', false)
+        console.log('🚪 LOGOUT ACTION COMPLETED SUCCESSFULLY')
         
         return { success: true };
       } catch (error) {
-        console.error('Logout error:', error)
+        console.error('🚪 Logout error:', error)
         commit('SET_LOADING', false)
         
         commit('LOGOUT') 
         delete axiosInstance.defaults.headers.common['Authorization'];
         
+        console.log('🚪 LOGOUT ACTION COMPLETED WITH ERROR')
         return { success: true, error };
       }
     },

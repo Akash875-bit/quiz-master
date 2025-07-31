@@ -199,17 +199,8 @@ export default {
     
     const handleLogout = async () => {
       try {
-        store.dispatch('addNotification', {
-          type: 'info',
-          message: 'Logging you out...'
-        });
-        
+        // Let the store action handle all notifications
         await store.dispatch('logout');
-        
-        store.dispatch('addNotification', {
-          type: 'success',
-          message: 'You have been successfully logged out'
-        });
        
         setTimeout(() => {
           router.push({ name: 'login' });

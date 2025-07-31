@@ -1,7 +1,7 @@
 <template>
   <div class="notifications-container position-fixed top-0 end-0 p-3" style="z-index: 1500;">
     <div 
-      v-for="notification in notifications" 
+      v-for="notification in displayedNotifications" 
       :key="notification.id" 
       class="toast show border-0 mb-2" 
       :class="getNotificationClass(notification.type)"
@@ -28,7 +28,7 @@
 </template>
 
 <script>
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useStore } from 'vuex';
 
 export default {
@@ -37,9 +37,28 @@ export default {
   setup() {
     const store = useStore();
     
+    // Use a ref to control when we actually update the displayed notifications
+    const displayedNotifications = ref([]);
+    
     const notifications = computed(() => {
       return store.getters.getNotifications;
     });
+    
+    // Watch for changes and update displayed notifications only when necessary
+    watch(notifications, (newNotifications) => {
+      console.log('🔔 NOTIFICATIONS COMPONENT - Notifications changed:', newNotifications.length, newNotifications.map(n => ({id: n.id, message: n.message, type: n.type})));
+      
+      // Only update if the notifications actually changed (not just a re-render)
+      const currentIds = displayedNotifications.value.map(n => n.id).sort();
+      const newIds = newNotifications.map(n => n.id).sort();
+      
+      if (JSON.stringify(currentIds) !== JSON.stringify(newIds)) {
+        console.log('🔄 UPDATING DISPLAYED NOTIFICATIONS');
+        displayedNotifications.value = [...newNotifications];
+      } else {
+        console.log('⏭️ SKIPPING UPDATE - Same notifications');
+      }
+    }, { immediate: true, deep: true });
     
     const getNotificationClass = (type) => {
       switch (type) {
@@ -74,7 +93,7 @@ export default {
     };
     
     return {
-      notifications,
+      displayedNotifications,
       getNotificationClass,
       getNotificationIcon,
       dismissNotification
@@ -87,22 +106,26 @@ export default {
 .notifications-container {
   max-width: 350px;
   pointer-events: none; /* Allow clicks to pass through container */
+  top: 100px !important; /* Move below the floating navbar */
 }
 
 .toast {
   opacity: 1 !important;
-  box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.15);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.2);
   animation: slideIn 0.3s ease-out;
   pointer-events: auto; /* But allow clicks on individual toasts */
-  margin-bottom: 0.75rem !important; /* Ensure consistent spacing */
+  margin-bottom: 1rem !important; /* Increased spacing between notifications */
   position: relative;
   z-index: 1050;
   /* Remove any default Bootstrap toast styling that might add icons */
   background-image: none !important;
+  /* Ensure no overlap by setting explicit positioning */
+  display: block !important;
+  width: 100% !important;
 }
 
 .toast:last-child {
-  margin-bottom: 0 !important; /* Remove margin from last notification */
+  margin-bottom: 0.5rem !important; /* Small margin for last notification */
 }
 
 .toast-body {
@@ -133,10 +156,23 @@ export default {
   }
 }
 
-/* Ensure proper stacking order */
-.toast:nth-child(1) { z-index: 1055; }
-.toast:nth-child(2) { z-index: 1054; }
-.toast:nth-child(3) { z-index: 1053; }
-.toast:nth-child(4) { z-index: 1052; }
-.toast:nth-child(5) { z-index: 1051; }
+@keyframes fadeOut {
+  0% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+/* Ensure proper stacking order with higher z-index values */
+.toast:nth-child(1) { z-index: 1060; }
+.toast:nth-child(2) { z-index: 1059; }
+.toast:nth-child(3) { z-index: 1058; }
+.toast:nth-child(4) { z-index: 1057; }
+.toast:nth-child(5) { z-index: 1056; }
+
+/* Notification animations and stacking complete */
 </style> 
