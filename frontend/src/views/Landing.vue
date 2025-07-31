@@ -1,29 +1,6 @@
 <template>
   <div class="landing-page">
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
-      <div class="container">
-        <router-link to="/" class="navbar-brand d-flex align-items-center">
-          <img src="/quiz-logo.svg" alt="Quiz Master" height="32" class="me-2" />
-          <span class="fw-bold text-primary">Quiz Master</span>
-        </router-link>
-        
-        <div class="navbar-nav ms-auto">
-          <template v-if="!isAuthenticated">
-            <router-link to="/login" class="nav-link me-3">Sign In</router-link>
-            <router-link to="/register" class="btn btn-primary px-4">Get Started</router-link>
-          </template>
-          <template v-else>
-            <router-link :to="isAdmin ? '/admin/dashboard' : '/dashboard'" class="btn btn-primary me-2">
-              Dashboard
-            </router-link>
-            <button @click="handleLogout" class="btn btn-outline-secondary">
-              Logout
-            </button>
-          </template>
-        </div>
-      </div>
-    </nav>
+
 
     <!-- Hero Section -->
     <section class="hero">
@@ -262,17 +239,7 @@ export default {
   overflow-x: hidden;
 }
 
-/* Navigation */
-.navbar {
-  backdrop-filter: blur(10px);
-  transition: all 0.3s ease;
-  z-index: 1000;
-}
 
-.navbar-brand {
-  font-size: 1.5rem;
-  text-decoration: none;
-}
 
 /* Hero Section */
 .hero {

@@ -105,6 +105,11 @@ const syncAuthState = () => {
   console.log(`Auth state synced: Authenticated=${isAuthenticated.value}`);
 };
 
+const toggleMobileMenu = () => {
+  const navbar = document.querySelector('.navbar-modern');
+  navbar.classList.toggle('mobile-menu-open');
+};
+
 
 onMounted(async () => {
   
@@ -164,100 +169,94 @@ onMounted(async () => {
 
 <template>
   <div id="app">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-      <div class="container">
-        <router-link class="navbar-brand" to="/">
-          <strong>Quiz Master</strong>
-        </router-link>
-        
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        
-        <div class="collapse navbar-collapse" id="navbarNav">
-          
-
-          <ul class="navbar-nav me-auto" v-if="!isAuthenticated">
-            <li class="nav-item">
-              <router-link class="nav-link" to="/">Home</router-link>
-            </li>
-          </ul>
-          
-          
-
-          <ul class="navbar-nav me-auto" v-else-if="!isAdmin">
-            <li class="nav-item">
-              <router-link class="nav-link" :to="{name: 'user.dashboard'}">Dashboard</router-link>
-            </li>
-            <li class="nav-item">
-              <router-link class="nav-link" :to="{name: 'user.subjects'}">Subjects</router-link>
-            </li>
-            <li class="nav-item">
-              <router-link class="nav-link" :to="{name: 'user.results'}">My Results</router-link>
-            </li>
-          </ul>
-          
-          
-          <ul class="navbar-nav me-auto" v-else>
-            <li class="nav-item">
-              <router-link class="nav-link" :to="{name: 'admin.dashboard'}">Dashboard</router-link>
-            </li>
-            <li class="nav-item">
-              <router-link class="nav-link" :to="{name: 'admin.subjects'}">Subjects</router-link>
-            </li>
-            <li class="nav-item">
-              <router-link class="nav-link" :to="{name: 'admin.users'}">Users</router-link>
-            </li>
-            <li class="nav-item">
-              <router-link class="nav-link" :to="{name: 'admin.reports'}">Reports</router-link>
-            </li>
-          </ul>
-          
-          
-
-          <ul class="navbar-nav ms-auto">
-            <template v-if="!isAuthenticated">
-              <li class="nav-item">
-                <router-link class="nav-link" :to="{name: 'login'}">
-                  <i class="bi bi-box-arrow-in-right me-1"></i> Login
-                </router-link>
-              </li>
-              <li class="nav-item">
-                <router-link class="nav-link" :to="{name: 'register'}">
-                  <i class="bi bi-person-plus me-1"></i> Register
-                </router-link>
-              </li>
-            </template>
-            <template v-else>
-              
-              <li class="nav-item me-2">
-                <button @click="logout" class="btn btn-outline-light">
-                  <i class="bi bi-box-arrow-right me-1"></i> Logout
-                </button>
-              </li>
-              
-
-              <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                  <i class="bi bi-person-circle me-1"></i> {{ user.username || 'User' }}
-                </a>
-                <ul class="dropdown-menu dropdown-menu-end">
-                  <li>
-                    <router-link class="dropdown-item" :to="isAdmin ? {name: 'admin.dashboard'} : {name: 'user.dashboard'}">
-                      <i class="bi bi-person me-2"></i> {{ isAdmin ? 'Dashboard' : 'Dashboard' }}
-                    </router-link>
-                  </li>
-                  <li><hr class="dropdown-divider"></li>
-                  <li>
-                    <a class="dropdown-item" href="#" @click.prevent="logout">
-                      <i class="bi bi-box-arrow-right me-2"></i> Logout
-                    </a>
-                  </li>
-                </ul>
-              </li>
-            </template>
-          </ul>
+    <nav class="navbar-modern">
+      <div class="navbar-container">
+        <!-- Left side - QuizMaster Logo -->
+        <div class="navbar-brand-section">
+          <router-link class="navbar-brand-modern" to="/">
+            <span class="brand-text">QuizMaster</span>
+          </router-link>
         </div>
+        
+        <!-- Center - Navigation Links (for authenticated users) -->
+        <div class="navbar-menu-section" v-if="isAuthenticated">
+          <div class="nav-links" v-if="!isAdmin">
+            <router-link class="nav-link-modern" :to="{name: 'user.dashboard'}">
+              <i class="bi bi-speedometer2 me-2"></i>
+              Dashboard
+            </router-link>
+            <router-link class="nav-link-modern" :to="{name: 'user.subjects'}">
+              <i class="bi bi-book me-2"></i>
+              Subjects
+            </router-link>
+            <router-link class="nav-link-modern" :to="{name: 'user.results'}">
+              <i class="bi bi-graph-up me-2"></i>
+              My Results
+            </router-link>
+          </div>
+          
+          <div class="nav-links" v-else>
+            <router-link class="nav-link-modern" :to="{name: 'admin.dashboard'}">
+              <i class="bi bi-speedometer2 me-2"></i>
+              Dashboard
+            </router-link>
+            <router-link class="nav-link-modern" :to="{name: 'admin.subjects'}">
+              <i class="bi bi-book me-2"></i>
+              Subjects
+            </router-link>
+            <router-link class="nav-link-modern" :to="{name: 'admin.users'}">
+              <i class="bi bi-people me-2"></i>
+              Users
+            </router-link>
+            <router-link class="nav-link-modern" :to="{name: 'admin.reports'}">
+              <i class="bi bi-bar-chart me-2"></i>
+              Reports
+            </router-link>
+          </div>
+        </div>
+        
+        <!-- Right side - Auth Actions -->
+        <div class="navbar-actions">
+          <template v-if="!isAuthenticated">
+            <router-link class="btn-auth btn-login" :to="{name: 'login'}">
+              <i class="bi bi-box-arrow-in-right me-2"></i>
+              Sign In
+            </router-link>
+            <router-link class="btn-auth btn-register" :to="{name: 'register'}">
+              <i class="bi bi-person-plus me-2"></i>
+              Get Started
+            </router-link>
+          </template>
+          <template v-else>
+            <div class="user-menu">
+              <div class="user-info">
+                <div class="user-avatar">
+                  <i class="bi bi-person-circle"></i>
+                </div>
+                <span class="username">{{ user.username || 'User' }}</span>
+                <i class="bi bi-chevron-down dropdown-arrow"></i>
+              </div>
+              <div class="user-dropdown">
+                <router-link class="dropdown-item-modern" :to="isAdmin ? {name: 'admin.dashboard'} : {name: 'user.dashboard'}">
+                  <i class="bi bi-speedometer2 me-2"></i>
+                  Dashboard
+                </router-link>
+                <div class="dropdown-divider-modern"></div>
+                <button class="dropdown-item-modern logout-btn" @click="logout">
+                  <i class="bi bi-box-arrow-right me-2"></i>
+                  Sign Out
+                </button>
+              </div>
+            </div>
+          </template>
+        </div>
+        
+        <!-- Mobile Menu Toggle -->
+        <button class="mobile-menu-toggle" @click="toggleMobileMenu">
+          <span class="hamburger-line"></span>
+          <span class="hamburger-line"></span>
+          <span class="hamburger-line"></span>
+        </button>
       </div>
     </nav>
     
@@ -319,6 +318,353 @@ main {
   margin: 0 auto;
   padding-left: 1rem;
   padding-right: 1rem;
+}
+
+/* Modern Navbar Styles */
+.navbar-modern {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50px;
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  padding: 0.75rem 0;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  max-width: 95%;
+  width: 800px;
+  min-width: 600px;
+}
+
+.navbar-modern:hover {
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  transform: translateX(-50%) translateY(-2px);
+}
+
+.navbar-container {
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+}
+
+.navbar-brand-section {
+  flex-shrink: 0;
+}
+
+.navbar-brand-modern {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: #2d3748;
+  font-weight: 700;
+  font-size: 1.4rem;
+  transition: all 0.3s ease;
+}
+
+.navbar-brand-modern:hover {
+  color: #667eea;
+  transform: translateY(-1px);
+}
+
+.brand-text {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 700;
+}
+
+.navbar-menu-section {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.navbar-actions {
+  flex-shrink: 0;
+}
+
+.nav-links {
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+}
+
+.nav-link-modern {
+  color: #4a5568;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.95rem;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.nav-link-modern:hover {
+  color: #667eea;
+  background: rgba(102, 126, 234, 0.1);
+  transform: translateY(-1px);
+}
+
+.nav-link-modern.router-link-active {
+  color: #667eea;
+  background: rgba(102, 126, 234, 0.15);
+  font-weight: 600;
+}
+
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.btn-auth {
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-login {
+  color: #667eea;
+  background: transparent;
+  border: 2px solid #667eea;
+}
+
+.btn-login:hover {
+  background: #667eea;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.btn-register {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: 2px solid transparent;
+}
+
+.btn-register:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+}
+
+.user-menu {
+  position: relative;
+  cursor: pointer;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  background: rgba(102, 126, 234, 0.1);
+  transition: all 0.3s ease;
+}
+
+.user-info:hover {
+  background: rgba(102, 126, 234, 0.15);
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1rem;
+}
+
+.username {
+  font-weight: 500;
+  color: #2d3748;
+}
+
+.dropdown-arrow {
+  color: #667eea;
+  transition: transform 0.3s ease;
+}
+
+.user-menu:hover .dropdown-arrow {
+  transform: rotate(180deg);
+}
+
+.user-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.5rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(20px);
+  min-width: 200px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+}
+
+.user-menu:hover .user-dropdown {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.dropdown-item-modern {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  color: #4a5568;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+
+.dropdown-item-modern:hover {
+  background: rgba(102, 126, 234, 0.1);
+  color: #667eea;
+}
+
+.dropdown-item-modern.logout-btn:hover {
+  background: rgba(245, 101, 101, 0.1);
+  color: #e53e3e;
+}
+
+.dropdown-divider-modern {
+  height: 1px;
+  background: rgba(0, 0, 0, 0.1);
+  margin: 0.5rem 0;
+}
+
+.mobile-menu-toggle {
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.hamburger-line {
+  width: 24px;
+  height: 2px;
+  background: #4a5568;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.mobile-menu-toggle:hover .hamburger-line {
+  background: #667eea;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .navbar-modern {
+    top: 10px;
+    max-width: 95%;
+    width: auto;
+    min-width: auto;
+    border-radius: 25px;
+    padding: 0.5rem 0;
+  }
+  
+  .navbar-container {
+    padding: 0 1rem;
+    gap: 1rem;
+  }
+  
+  .navbar-menu-section {
+    display: none;
+  }
+  
+  .navbar-actions {
+    display: none;
+  }
+  
+  .mobile-menu-toggle {
+    display: flex;
+  }
+  
+  .navbar-modern.mobile-menu-open {
+    border-radius: 25px 25px 0 0;
+    top: 10px;
+  }
+  
+  .navbar-modern.mobile-menu-open .navbar-menu-section,
+  .navbar-modern.mobile-menu-open .navbar-actions {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 1rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    border-radius: 0 0 25px 25px;
+  }
+  
+  .navbar-modern.mobile-menu-open .nav-links {
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+  }
+  
+  .navbar-modern.mobile-menu-open .nav-link-modern {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .navbar-modern.mobile-menu-open .navbar-actions {
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+  
+  .navbar-modern.mobile-menu-open .btn-auth {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Remove margin since we now have a floating navbar */
+main {
+  margin-top: 0;
 }
 
 .navbar-brand {
