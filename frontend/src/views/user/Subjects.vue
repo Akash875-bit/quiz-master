@@ -1,5 +1,5 @@
 <template>
-  <div class="container py-5">
+  <div class="container page-container">
     <h1 class="mb-4">Browse Subjects</h1>
     
     <div v-if="loading" class="text-center py-5">

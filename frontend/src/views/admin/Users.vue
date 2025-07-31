@@ -1,5 +1,5 @@
 <template>
-  <div class="container py-5">
+  <div class="container page-container">
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h1>User Management</h1>
       <button class="btn btn-success" @click="exportUsersCsv">

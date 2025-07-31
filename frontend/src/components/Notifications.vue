@@ -3,22 +3,24 @@
     <div 
       v-for="notification in notifications" 
       :key="notification.id" 
-      class="toast show align-items-center border-0 mb-2" 
+      class="toast show border-0 mb-2" 
       :class="getNotificationClass(notification.type)"
       role="alert" 
       aria-live="assertive" 
       aria-atomic="true"
       style="min-width: 300px;"
     >
-      <div class="d-flex">
-        <div class="toast-body">
+      <div class="d-flex align-items-center">
+        <div class="toast-body d-flex align-items-center">
           <i :class="getNotificationIcon(notification.type)" class="me-2"></i>
-          {{ notification.message }}
+          <span>{{ notification.message }}</span>
         </div>
         <button 
           type="button" 
-          class="btn-close btn-close-white me-2 m-auto" 
+          class="btn-close me-2" 
+          :class="notification.type === 'warning' || notification.type === 'info' ? 'btn-close-dark' : 'btn-close-white'"
           @click="dismissNotification(notification.id)"
+          aria-label="Close"
         ></button>
       </div>
     </div>
@@ -84,15 +86,40 @@ export default {
 <style scoped>
 .notifications-container {
   max-width: 350px;
+  pointer-events: none; /* Allow clicks to pass through container */
 }
 
 .toast {
   opacity: 1 !important;
   box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.15);
+  animation: slideIn 0.3s ease-out;
+  pointer-events: auto; /* But allow clicks on individual toasts */
+  margin-bottom: 0.75rem !important; /* Ensure consistent spacing */
+  position: relative;
+  z-index: 1050;
+  /* Remove any default Bootstrap toast styling that might add icons */
+  background-image: none !important;
 }
 
-.toast {
-  animation: slideIn 0.3s ease-out;
+.toast:last-child {
+  margin-bottom: 0 !important; /* Remove margin from last notification */
+}
+
+.toast-body {
+  padding: 0.75rem;
+  /* Ensure no pseudo-elements or background images */
+  background-image: none !important;
+}
+
+.toast-body::before,
+.toast-body::after {
+  display: none !important; /* Remove any pseudo-element icons */
+}
+
+/* Ensure only our custom icon shows */
+.toast-body i {
+  font-size: 1rem;
+  flex-shrink: 0;
 }
 
 @keyframes slideIn {
@@ -105,4 +132,11 @@ export default {
     opacity: 1;
   }
 }
+
+/* Ensure proper stacking order */
+.toast:nth-child(1) { z-index: 1055; }
+.toast:nth-child(2) { z-index: 1054; }
+.toast:nth-child(3) { z-index: 1053; }
+.toast:nth-child(4) { z-index: 1052; }
+.toast:nth-child(5) { z-index: 1051; }
 </style> 

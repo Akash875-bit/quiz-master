@@ -1,29 +1,36 @@
 <template>
-  <div class="container-fluid py-4">
+  <div class="container-fluid page-container">
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h1 class="h2 mb-0">Analytics Dashboard</h1>
       <div class="d-flex gap-3">
         <div class="btn-group">
           <button 
             class="btn btn-outline-primary" 
-            :class="{ active: period === '7days' }"
-            @click="changePeriod('7days')"
+            :class="{ active: period === 'week' }"
+            @click="changePeriod('week')"
           >
             Last 7 Days
           </button>
           <button 
             class="btn btn-outline-primary" 
-            :class="{ active: period === '30days' }"
-            @click="changePeriod('30days')"
+            :class="{ active: period === 'month' }"
+            @click="changePeriod('month')"
           >
             Last 30 Days
           </button>
           <button 
             class="btn btn-outline-primary" 
-            :class="{ active: period === '90days' }"
-            @click="changePeriod('90days')"
+            :class="{ active: period === 'quarter' }"
+            @click="changePeriod('quarter')"
           >
             Last 90 Days
+          </button>
+          <button 
+            class="btn btn-outline-primary" 
+            :class="{ active: period === 'year' }"
+            @click="changePeriod('year')"
+          >
+            Last Year
           </button>
         </div>
         <button class="btn btn-primary" @click="exportReport">
@@ -297,7 +304,7 @@ export default {
   setup() {
     const store = useStore()
     const loading = ref(true)
-    const period = ref('30days')
+    const period = ref('month')
     const reports = ref({
       overview: {
         totalUsers: 0,
@@ -355,18 +362,36 @@ export default {
     const fetchReports = async () => {
       loading.value = true
       try {
+        console.log('Fetching reports for period:', period.value)
         const response = await store.dispatch('fetchReports', period.value)
-        reports.value = response
+        console.log('Reports response:', response)
         
-        nextTick(() => {
-          initUserActivityChart()
-          initSubjectPerformanceChart()
-        })
+        if (response && response.overview) {
+          reports.value = response
+          
+          nextTick(() => {
+            if (response.analytics && response.analytics.userActivity) {
+              initUserActivityChart()
+            }
+            if (response.analytics && response.analytics.subjectPerformance) {
+              initSubjectPerformanceChart()
+            }
+          })
+        } else {
+          console.warn('Invalid reports response structure:', response)
+          store.dispatch('addNotification', {
+            type: 'warning',
+            message: 'No analytics data available yet. Try creating some quiz data first.'
+          })
+        }
       } catch (error) {
         console.error('Error fetching reports:', error)
+        const errorMessage = error.response?.data?.error || error.message || 'Unknown error'
+        console.error('Detailed error:', errorMessage)
+        
         store.dispatch('addNotification', {
           type: 'danger',
-          message: 'Failed to load analytics data. Please try again.'
+          message: `Failed to load analytics data: ${errorMessage}`
         })
       } finally {
         loading.value = false

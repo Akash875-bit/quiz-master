@@ -1,5 +1,5 @@
 <template>
-  <div class="landing-page">
+  <div class="landing-page page-container no-top-padding">
 
 
     <!-- Hero Section -->

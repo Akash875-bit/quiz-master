@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from app import create_app
-from models import db, User, Subject, Chapter, Quiz, Question, Choice, Score
+from models import db, User, Subject, Chapter, Quiz, Question, Choice, Score, Answer, UserAnswer
 from werkzeug.security import generate_password_hash
 from datetime import datetime, timedelta
 import random
@@ -258,6 +258,127 @@ def create_questions(quizzes):
     print("questions and options created successfully!")
 
 
+def create_realistic_quiz_attempts():
+    """Create realistic quiz attempts with user answers"""
+    print("Creating realistic quiz attempts with answers...")
+    
+    # Get all users except admin
+    users = User.query.filter(User.role != 'admin').all()
+    quizzes = Quiz.query.all()
+    
+    if not users or not quizzes:
+        print("No users or quizzes found. Skipping quiz attempts creation.")
+        return
+    
+    attempts_created = 0
+    
+    # Create quiz attempts for the last 30 days
+    for i in range(30):
+        date = datetime.now() - timedelta(days=i)
+        
+        # Create 3-8 random quiz attempts per day
+        daily_attempts = random.randint(3, 8)
+        
+        for _ in range(daily_attempts):
+            user = random.choice(users)
+            quiz = random.choice(quizzes)
+            
+            # Check if this user already attempted this quiz on this date
+            existing_score = Score.query.filter(
+                Score.user_id == user.id,
+                Score.quiz_id == quiz.id,
+                Score.completed_at >= date.replace(hour=0, minute=0, second=0),
+                Score.completed_at < date.replace(hour=23, minute=59, second=59)
+            ).first()
+            
+            if existing_score:
+                continue
+            
+            # Get all questions for this quiz
+            questions = Question.query.filter_by(quiz_id=quiz.id).all()
+            if not questions:
+                continue
+            
+            # Create the score record first
+            time_taken = random.randint(300, 1800)  # 5-30 minutes
+            completed_at = date.replace(
+                hour=random.randint(8, 20),
+                minute=random.randint(0, 59),
+                second=random.randint(0, 59)
+            )
+            
+            score_record = Score(
+                user_id=user.id,
+                quiz_id=quiz.id,
+                score=0,  # Will calculate after creating answers
+                time_taken=time_taken,
+                passed=False,  # Will update after calculating score
+                completed_at=completed_at
+            )
+            db.session.add(score_record)
+            db.session.flush()  # Get the score ID
+            
+            # Now create answers for each question
+            total_points = 0
+            earned_points = 0
+            
+            for question in questions:
+                # Get all choices for this question
+                choices = Choice.query.filter_by(question_id=question.id).all()
+                if not choices:
+                    continue
+                
+                # User selects a random choice (simulate different skill levels)
+                # 70% chance of getting it right for variety
+                if random.random() < 0.7:
+                    # Try to select correct answer
+                    correct_choices = [c for c in choices if c.is_correct]
+                    selected_choice = random.choice(correct_choices) if correct_choices else random.choice(choices)
+                else:
+                    # Select random answer (might be wrong)
+                    selected_choice = random.choice(choices)
+                
+                is_correct = selected_choice.is_correct
+                
+                # Create Answer record
+                answer = Answer(
+                    score_id=score_record.id,
+                    question_id=question.id,
+                    choice_id=selected_choice.id,
+                    is_correct=is_correct
+                )
+                db.session.add(answer)
+                
+                # Create UserAnswer record (seems to be an alternative/additional format)
+                user_answer = UserAnswer(
+                    score_id=score_record.id,
+                    question_id=question.id,
+                    selected_option=choices.index(selected_choice) + 1,  # 1-based index
+                    is_correct=is_correct
+                )
+                db.session.add(user_answer)
+                
+                # Calculate points
+                total_points += question.points
+                if is_correct:
+                    earned_points += question.points
+            
+            # Calculate final score percentage
+            if total_points > 0:
+                score_percentage = (earned_points / total_points) * 100
+            else:
+                score_percentage = 0
+            
+            # Update the score record
+            score_record.score = round(score_percentage, 2)
+            score_record.passed = score_percentage >= (quiz.passing_score or 70)
+            
+            attempts_created += 1
+    
+    db.session.commit()
+    print(f"Created {attempts_created} realistic quiz attempts with answers!")
+
+
 def seed_all():
     """Run all seeding functions"""
     create_users()
@@ -265,6 +386,7 @@ def seed_all():
     chapters = create_chapters(subjects)
     quizzes = create_quizzes(chapters)
     create_questions(quizzes)
+    create_realistic_quiz_attempts()
     print("Database seeding completed successfully!")
 
 

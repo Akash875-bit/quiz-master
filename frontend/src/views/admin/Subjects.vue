@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="page-container">
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h1>Subject Management</h1>
       <button class="btn btn-success" @click="showAddModal">

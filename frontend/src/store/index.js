@@ -261,7 +261,25 @@ const store = createStore({
       state.error = error
     },
     ADD_NOTIFICATION(state, notification) {
-      const id = Date.now().toString()
+      // Check for duplicate messages (prevent spam)
+      const now = Date.now()
+      const existingNotification = state.notifications.find(n => 
+        n.message === notification.message && 
+        n.type === (notification.type || 'info') &&
+        (now - parseInt(n.id)) < 1000 // Prevent duplicates within 1 second
+      )
+      
+      if (existingNotification) {
+        console.log('Duplicate notification prevented:', notification.message)
+        return
+      }
+      
+      // Limit total notifications to prevent overflow
+      if (state.notifications.length >= 5) {
+        state.notifications.shift() // Remove oldest notification
+      }
+      
+      const id = now.toString()
       state.notifications.push({
         id,
         message: notification.message,

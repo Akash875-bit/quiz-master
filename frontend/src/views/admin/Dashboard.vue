@@ -4,7 +4,7 @@
 
 <template>
   <div class="admin-dashboard">
-    <div class="container py-5">
+    <div class="container admin-container">
       <div class="dashboard-header mb-5">
         <h1 class="dashboard-title">Admin Dashboard</h1>
         <p class="dashboard-subtitle">Manage your quiz platform and monitor performance</p>
@@ -71,15 +71,15 @@
               <p class="action-description">Create a new subject for your curriculum</p>
             </router-link>
 
-            <router-link to="/admin/quizzes" class="action-card">
+            <router-link :to="{name: 'admin.subjects'}" class="action-card">
               <div class="action-icon bg-primary-soft">
                 <i class="bi bi-plus-circle text-primary"></i>
               </div>
               <h4 class="action-title">Create Quiz</h4>
-              <p class="action-description">Design a new quiz with questions</p>
+              <p class="action-description">Start by selecting a subject, then create quizzes</p>
             </router-link>
 
-            <router-link to="/admin/users" class="action-card">
+            <router-link :to="{name: 'admin.users'}" class="action-card">
               <div class="action-icon bg-warning-soft">
                 <i class="bi bi-people text-warning"></i>
               </div>
@@ -87,7 +87,7 @@
               <p class="action-description">View and manage user accounts</p>
             </router-link>
 
-            <router-link to="/admin/reports" class="action-card">
+            <router-link :to="{name: 'admin.reports'}" class="action-card">
               <div class="action-icon bg-info-soft">
                 <i class="bi bi-graph-up text-info"></i>
               </div>
@@ -101,7 +101,7 @@
         <div class="recent-section">
           <div class="section-header">
             <h3 class="section-title">Recent Quizzes</h3>
-            <router-link to="/admin/quizzes" class="btn btn-outline-primary btn-sm-modern">View All</router-link>
+            <router-link :to="{name: 'admin.subjects'}" class="btn btn-outline-primary btn-sm-modern">View All</router-link>
           </div>
           
           <div class="quiz-grid">
@@ -171,7 +171,9 @@ const fetchStats = async () => {
         const quizzesResponse = await quizService.getAll(chapter.id);
         quizzesCount += quizzesResponse.data.length;
   
-        const active = quizzesResponse.data.filter(quiz => quiz.date_of_quiz >= today);
+        const active = quizzesResponse.data.filter(quiz => {
+          return quiz.is_active === true || quiz.is_active === 1;
+        });
         activeQuizzesCount += active.length;
         
 
@@ -217,6 +219,13 @@ onMounted(fetchStats);
   background: #f8fafc;
   min-height: 100vh;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.admin-container {
+  padding-top: 120px !important;
+  padding-bottom: 3rem !important;
+  padding-left: 1rem;
+  padding-right: 1rem;
 }
 
 .dashboard-header {

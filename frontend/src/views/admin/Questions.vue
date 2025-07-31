@@ -1,6 +1,6 @@
 <template>
   
-  <div>
+  <div class="page-container">
     <div class="d-flex align-items-center mb-4">
       <router-link :to="{ name: 'admin.quizzes', params: { chapterId: quiz?.chapter_id || 0 } }" class="btn btn-outline-primary me-3">
         <i class="bi bi-arrow-left me-2"></i>Back to Quizzes

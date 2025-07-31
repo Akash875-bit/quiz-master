@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="page-container">
     
     <div v-if="quiz" class="mb-4">
       <div class="d-flex align-items-center mb-3">

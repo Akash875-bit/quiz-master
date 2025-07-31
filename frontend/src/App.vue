@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, provide } from 'vue';
+import { ref, computed, onMounted, onUnmounted, provide } from 'vue';
 import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
 import Notifications from './components/Notifications.vue';
@@ -7,8 +7,8 @@ import axios from 'axios';
 
 const router = useRouter();
 const store = useStore();
-const isAuthenticated = ref(!!localStorage.getItem('quiz_master_token'));
-const user = ref(JSON.parse(localStorage.getItem('quiz_master_user') || '{}'));
+const isAuthenticated = computed(() => store.getters.isAuthenticated);
+const user = computed(() => store.getters.currentUser);
 const currentYear = computed(() => new Date().getFullYear());
 
 
@@ -16,7 +16,7 @@ provide('isAuthenticated', isAuthenticated);
 provide('currentUser', user);
 
 const isAdmin = computed(() => {
-  return user.value && user.value.role === 'admin';
+  return store.getters.isAdmin;
 });
 
 const menuItems = computed(() => {
@@ -53,17 +53,7 @@ const logout = async () => {
     localStorage.removeItem('quiz_master_user');
     
     
-    isAuthenticated.value = false;
-    user.value = {};
-    
-    
     store.dispatch('resetAuthHeader');
-    
-    
-    store.dispatch('addNotification', {
-      type: 'success',
-      message: 'You have been successfully logged out'
-    });
     
     console.log('User logged out, redirecting to login page');
     
@@ -83,8 +73,6 @@ const logout = async () => {
     localStorage.removeItem('quiz_master_token');
     localStorage.removeItem('quiz_master_refresh_token');
     localStorage.removeItem('quiz_master_user');
-    isAuthenticated.value = false;
-    user.value = {};
     store.dispatch('resetAuthHeader');
     
     
@@ -95,75 +83,58 @@ const logout = async () => {
 };
 
 
-const syncAuthState = () => {
-  const token = localStorage.getItem('quiz_master_token');
-  const userJson = localStorage.getItem('quiz_master_user');
-  
-  isAuthenticated.value = !!token;
-  user.value = userJson ? JSON.parse(userJson) : {};
-  
-  console.log(`Auth state synced: Authenticated=${isAuthenticated.value}`);
-};
+
 
 const toggleMobileMenu = () => {
   const navbar = document.querySelector('.navbar-modern');
   navbar.classList.toggle('mobile-menu-open');
 };
 
+// User dropdown state
+const showUserDropdown = ref(false);
+
+const toggleUserDropdown = () => {
+  showUserDropdown.value = !showUserDropdown.value;
+  console.log('Dropdown toggled:', showUserDropdown.value);
+};
+
+// Close dropdown when clicking outside
+const closeUserDropdown = () => {
+  showUserDropdown.value = false;
+};
+
 
 onMounted(async () => {
-  
-  window.addEventListener('storage', (event) => {
-    if (event.key === 'quiz_master_token' || event.key === 'quiz_master_user') {
-      syncAuthState();
-    }
-  });
-
-  
   const token = localStorage.getItem('quiz_master_token');
   if (token) {
     try {
       console.log('Validating session with backend...');
       
       
-      const isValid = await store.dispatch('validateSession');
+      await store.dispatch('validateSession');
       
-      if (isValid) {
-        
-        isAuthenticated.value = true;
-        user.value = store.getters.currentUser;
-        console.log('User session is valid:', user.value);
-        
-        
-        const currentToken = localStorage.getItem('quiz_master_token');
-        if (currentToken) {
-          console.log('Setting auth header for future requests');
-          axios.defaults.headers.common['Authorization'] = `Bearer ${currentToken}`;
-        }
-      } else {
-        console.log('Session is invalid, user needs to login again');
-        isAuthenticated.value = false;
-        user.value = {};
-        
-        
-        localStorage.removeItem('quiz_master_token');
-        localStorage.removeItem('quiz_master_refresh_token');
-        localStorage.removeItem('quiz_master_user');
-      }
+      console.log('Session validated successfully');
     } catch (err) {
       console.error('Session validation error:', err);
       
       
-      console.log('Error during session validation, using existing auth state');
+      localStorage.removeItem('quiz_master_token');
+      localStorage.removeItem('quiz_master_refresh_token');
+      localStorage.removeItem('quiz_master_user');
       
-      
-      syncAuthState();
+      console.log('Error during session validation, clearing auth state');
     }
   } else {
     console.log('No token found, user is not authenticated');
-    isAuthenticated.value = false;
-    user.value = {};
   }
+  
+  // Add global click listener to close dropdown
+  document.addEventListener('click', closeUserDropdown);
+});
+
+onUnmounted(() => {
+  // Clean up event listener
+  document.removeEventListener('click', closeUserDropdown);
 });
 </script>
 
@@ -228,20 +199,15 @@ onMounted(async () => {
             </router-link>
           </template>
           <template v-else>
-            <div class="user-menu">
-              <div class="user-info">
+            <div class="user-menu" @click.stop>
+              <div class="user-info" @click="toggleUserDropdown">
                 <div class="user-avatar">
                   <i class="bi bi-person-circle"></i>
                 </div>
                 <span class="username">{{ user.username || 'User' }}</span>
-                <i class="bi bi-chevron-down dropdown-arrow"></i>
+                <i class="bi bi-chevron-down dropdown-arrow" :class="{ 'rotated': showUserDropdown }"></i>
               </div>
-              <div class="user-dropdown">
-                <router-link class="dropdown-item-modern" :to="isAdmin ? {name: 'admin.dashboard'} : {name: 'user.dashboard'}">
-                  <i class="bi bi-speedometer2 me-2"></i>
-                  Dashboard
-                </router-link>
-                <div class="dropdown-divider-modern"></div>
+              <div class="user-dropdown" v-if="showUserDropdown">
                 <button class="dropdown-item-modern logout-btn" @click="logout">
                   <i class="bi bi-box-arrow-right me-2"></i>
                   Sign Out
@@ -335,9 +301,10 @@ main {
   padding: 0.75rem 0;
   transition: all 0.3s ease;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  max-width: 95%;
-  width: 800px;
-  min-width: 600px;
+  max-width: calc(100vw - 40px); /* Responsive width with margin */
+  width: auto;
+  min-width: 320px; /* Minimum for mobile */
+  overflow: visible; /* Allow dropdown to overflow navbar */
 }
 
 .navbar-modern:hover {
@@ -349,11 +316,13 @@ main {
 .navbar-container {
   max-width: 100%;
   margin: 0 auto;
-  padding: 0 2rem;
+  padding: 0 1.5rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 2rem;
+  gap: 1rem;
+  min-height: 50px;
+  overflow: visible; /* Allow dropdown to overflow */
 }
 
 .navbar-brand-section {
@@ -387,16 +356,21 @@ main {
   flex: 1;
   display: flex;
   justify-content: center;
+  overflow: hidden; /* Prevent overflow */
 }
 
 .navbar-actions {
   flex-shrink: 0;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
 }
 
 .nav-links {
   display: flex;
-  gap: 2rem;
+  gap: 1.5rem;
   align-items: center;
+  overflow: hidden; /* Prevent overflow */
 }
 
 .nav-link-modern {
@@ -481,6 +455,7 @@ main {
   border-radius: 8px;
   background: rgba(102, 126, 234, 0.1);
   transition: all 0.3s ease;
+  cursor: pointer;
 }
 
 .user-info:hover {
@@ -515,25 +490,37 @@ main {
 
 .user-dropdown {
   position: absolute;
-  top: 100%;
+  top: 100%; /* Position below the navbar */
   right: 0;
-  margin-top: 0.5rem;
+  margin-top: 0.5rem; /* Space below the navbar */
   background: white;
   border-radius: 12px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
   border: 1px solid rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(20px);
   min-width: 200px;
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(-10px);
-  transition: all 0.3s ease;
+  z-index: 1001;
+  animation: dropdown-enter-below 0.3s ease-out;
 }
 
-.user-menu:hover .user-dropdown {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
+@keyframes dropdown-enter-below {
+  from {
+    opacity: 0;
+    transform: translateY(-10px); /* Move down from above */
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Chevron rotation */
+.dropdown-arrow {
+  transition: transform 0.3s ease;
+}
+
+.dropdown-arrow.rotated {
+  transform: rotate(180deg);
 }
 
 .dropdown-item-modern {
@@ -665,6 +652,16 @@ main {
 /* Remove margin since we now have a floating navbar */
 main {
   margin-top: 0;
+}
+
+/* Global page container spacing for floating navbar */
+.page-container {
+  padding-top: 120px !important;
+  padding-bottom: 2rem !important;
+}
+
+.page-container.no-top-padding {
+  padding-top: 0 !important;
 }
 
 .navbar-brand {
@@ -816,7 +813,91 @@ h1, h2, h3, h4, h5, h6, p, label, span, a, button, input, select, textarea {
 }
 
 /* Responsive Design */
+@media (max-width: 1200px) {
+  .navbar-modern {
+    max-width: calc(100vw - 30px);
+  }
+  
+  .navbar-container {
+    padding: 0 1rem;
+    gap: 0.75rem;
+  }
+  
+  .nav-links {
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 992px) {
+  .navbar-modern {
+    max-width: calc(100vw - 20px);
+    border-radius: 25px;
+  }
+  
+  .navbar-container {
+    padding: 0 0.75rem;
+    gap: 0.5rem;
+  }
+  
+  .brand-text {
+    font-size: 1.2rem;
+  }
+  
+  .nav-links {
+    gap: 0.75rem;
+  }
+  
+  .nav-link-modern {
+    font-size: 0.9rem;
+    padding: 0.4rem 0.8rem;
+  }
+  
+  .btn-auth {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+  }
+}
+
 @media (max-width: 768px) {
+  .navbar-modern {
+    top: 10px;
+    max-width: calc(100vw - 20px);
+    border-radius: 20px;
+    padding: 0.5rem 0;
+  }
+  
+  .navbar-container {
+    padding: 0 0.5rem;
+    gap: 0.25rem;
+  }
+  
+  .brand-text {
+    font-size: 1.1rem;
+  }
+  
+  .navbar-menu-section {
+    display: none; /* Hide center navigation on mobile */
+  }
+  
+  .navbar-actions {
+    gap: 0.25rem;
+  }
+  
+  .btn-auth {
+    padding: 0.35rem 0.7rem;
+    font-size: 0.8rem;
+    border-radius: 15px;
+  }
+  
+  .user-menu .username {
+    display: none; /* Hide username on mobile */
+  }
+  
+  .user-info {
+    gap: 0.25rem;
+  }
+  
+  /* Footer responsive */
   .footer-main {
     flex-direction: column;
     text-align: center;
@@ -836,6 +917,31 @@ h1, h2, h3, h4, h5, h6, p, label, span, a, button, input, select, textarea {
   
   .footer-link {
     margin: 0 0.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar-modern {
+    top: 5px;
+    max-width: calc(100vw - 10px);
+    border-radius: 15px;
+  }
+  
+  .navbar-container {
+    padding: 0 0.4rem;
+  }
+  
+  .brand-text {
+    font-size: 1rem;
+  }
+  
+  .btn-auth {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.75rem;
+  }
+  
+  .user-avatar {
+    font-size: 1.2rem;
   }
 }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <div class="container py-5">
+  <div class="container page-container">
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h1>My Results</h1>
       <div>

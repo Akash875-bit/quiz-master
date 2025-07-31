@@ -168,7 +168,7 @@ onMounted(fetchData);
 
 <template>
   <div class="dashboard-page">
-    <div class="container py-5">
+    <div class="container user-container">
       <div class="dashboard-header mb-5">
         <h1 class="dashboard-title">Dashboard</h1>
         <p class="dashboard-subtitle">Track your progress and manage your learning journey</p>
@@ -347,6 +347,13 @@ onMounted(fetchData);
   background: #f8fafc;
   min-height: 100vh;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.user-container {
+  padding-top: 120px !important;
+  padding-bottom: 3rem !important;
+  padding-left: 1rem;
+  padding-right: 1rem;
 }
 
 .dashboard-header {
