@@ -1101,11 +1101,15 @@ const store = createStore({
     },
     
     async validateSession({ commit, state }) {
-      if (!state.token) {
+      const token = localStorage.getItem('quiz_master_token');
+      if (!token) {
         return false;
       }
       
       try {
+        // Set the token in axios headers for the validation request
+        axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        
         const response = await axiosInstance.get('/auth/user', {
           timeout: 5000,
           _ignoreAuthError: true 
@@ -1113,6 +1117,7 @@ const store = createStore({
         
         if (response.status === 200 && response.data) {
           commit('SET_USER', response.data);
+          commit('SET_TOKEN', token);
           return true;
         }
         

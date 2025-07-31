@@ -365,16 +365,31 @@ export default {
         console.log('Fetching reports for period:', period.value)
         const response = await store.dispatch('fetchReports', period.value)
         console.log('Reports response:', response)
+        console.log('📊 Full response structure:', JSON.stringify(response, null, 2))
         
         if (response && response.overview) {
           reports.value = response
+          console.log('✅ Reports data set successfully')
+          console.log('📈 Analytics data available:', {
+            hasUserActivity: !!response.analytics?.userActivity,
+            hasSubjectPerformance: !!response.analytics?.subjectPerformance,
+            userActivityLabels: response.analytics?.userActivity?.labels?.length || 0,
+            subjectPerformanceLabels: response.analytics?.subjectPerformance?.labels?.length || 0
+          })
           
           nextTick(() => {
+            console.log('🔄 NextTick - checking analytics data')
             if (response.analytics && response.analytics.userActivity) {
+              console.log('📊 Initializing User Activity Chart...')
               initUserActivityChart()
+            } else {
+              console.warn('⚠️ No user activity data in response')
             }
             if (response.analytics && response.analytics.subjectPerformance) {
+              console.log('📊 Initializing Subject Performance Chart...')
               initSubjectPerformanceChart()
+            } else {
+              console.warn('⚠️ No subject performance data in response')
             }
           })
         } else {
@@ -398,11 +413,38 @@ export default {
       }
     }
     
-    const initUserActivityChart = () => {
+    const initUserActivityChart = (retryCount = 0) => {
+      console.log('🔍 Initializing User Activity Chart')
+      console.log('📊 User Activity Data:', reports.value.analytics.userActivity)
+      
+      // Check if canvas element exists
+      if (!userActivityChart.value) {
+        if (retryCount < 10) {
+          console.warn(`⚠️ User Activity Chart canvas not found, retrying in 100ms... (attempt ${retryCount + 1}/10)`)
+          setTimeout(() => initUserActivityChart(retryCount + 1), 100)
+          return
+        } else {
+          console.error('❌ Failed to initialize User Activity Chart after 10 attempts')
+          return
+        }
+      }
+      
       const ctx = userActivityChart.value.getContext('2d')
       if (userActivityChartInstance) {
         userActivityChartInstance.destroy()
       }
+      
+      // Check if we have data
+      if (!reports.value.analytics.userActivity.labels || reports.value.analytics.userActivity.labels.length === 0) {
+        console.warn('⚠️ No user activity data available for chart')
+        return
+      }
+      
+      console.log('📈 Creating User Activity Chart with data:', {
+        labels: reports.value.analytics.userActivity.labels,
+        newUsers: reports.value.analytics.userActivity.newUsers,
+        quizAttempts: reports.value.analytics.userActivity.quizAttempts
+      })
       
       userActivityChartInstance = new Chart(ctx, {
         type: 'line',
@@ -454,13 +496,42 @@ export default {
           }
         }
       })
+      
+      console.log('✅ User Activity Chart created successfully')
     }
     
-    const initSubjectPerformanceChart = () => {
+    const initSubjectPerformanceChart = (retryCount = 0) => {
+      console.log('🔍 Initializing Subject Performance Chart')
+      console.log('📊 Subject Performance Data:', reports.value.analytics.subjectPerformance)
+      
+      // Check if canvas element exists
+      if (!subjectPerformanceChart.value) {
+        if (retryCount < 10) {
+          console.warn(`⚠️ Subject Performance Chart canvas not found, retrying in 100ms... (attempt ${retryCount + 1}/10)`)
+          setTimeout(() => initSubjectPerformanceChart(retryCount + 1), 100)
+          return
+        } else {
+          console.error('❌ Failed to initialize Subject Performance Chart after 10 attempts')
+          return
+        }
+      }
+      
       const ctx = subjectPerformanceChart.value.getContext('2d')
       if (subjectPerformanceChartInstance) {
         subjectPerformanceChartInstance.destroy()
       }
+      
+      // Check if we have data
+      if (!reports.value.analytics.subjectPerformance.labels || reports.value.analytics.subjectPerformance.labels.length === 0) {
+        console.warn('⚠️ No subject performance data available for chart')
+        return
+      }
+      
+      console.log('📈 Creating Subject Performance Chart with data:', {
+        labels: reports.value.analytics.subjectPerformance.labels,
+        avgScores: reports.value.analytics.subjectPerformance.avgScores,
+        passRates: reports.value.analytics.subjectPerformance.passRates
+      })
       
       subjectPerformanceChartInstance = new Chart(ctx, {
         type: 'bar',
@@ -506,6 +577,8 @@ export default {
           }
         }
       })
+      
+      console.log('✅ Subject Performance Chart created successfully')
     }
     
     const exportReport = async () => {

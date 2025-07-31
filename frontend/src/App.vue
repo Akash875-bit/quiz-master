@@ -97,14 +97,22 @@ const closeUserDropdown = () => {
 
 
 onMounted(async () => {
-  // Clear any existing tokens to force fresh login
-  localStorage.removeItem('quiz_master_token');
-  localStorage.removeItem('quiz_master_refresh_token');
-  localStorage.removeItem('quiz_master_user');
+  // Check if user is already logged in and validate session
+  const token = localStorage.getItem('quiz_master_token');
+  const user = localStorage.getItem('quiz_master_user');
   
-  console.log('Cleared existing tokens, please log in again');
+  if (token && user) {
+    console.log('🔍 Found existing session, validating...');
+    try {
+      await store.dispatch('checkAuth');
+      console.log('✅ Session validated successfully');
+    } catch (error) {
+      console.log('❌ Session invalid, user needs to log in again');
+    }
+  } else {
+    console.log('🔍 No existing session found');
+  }
   
-  // Add global click listener to close dropdown
   document.addEventListener('click', closeUserDropdown);
 });
 
