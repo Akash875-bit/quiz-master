@@ -14,10 +14,10 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(config => {
   const token = localStorage.getItem('quiz_master_token')
   if (token) {
-    console.log('Adding token to request:', config.url)
+    console.log('📡 Adding token to request:', config.url, 'Token:', token.substring(0, 20) + '...')
     config.headers.Authorization = `Bearer ${token}`
   } else {
-    console.log('No token available for request:', config.url)
+    console.log('📡 No token available for request:', config.url)
   }
   return config
 }, error => {
@@ -30,15 +30,20 @@ let isLoggingOut = false;
 
 
 axiosInstance.interceptors.response.use(
-  response => response,
+  response => {
+    console.log('✅ Request successful:', response.config.url, 'Status:', response.status);
+    return response;
+  },
   async error => {
     console.error('Response error:', error.response?.status || 'Network Error', error.config?.url || 'Unknown URL')
     const originalRequest = error.config;
     
     
-    if (originalRequest._retry || originalRequest._ignoreAuthError) {
-      return Promise.reject(error);
-    }
+         // Prevent infinite loops - if already retried or should ignore auth errors
+     if (originalRequest._retry || originalRequest._ignoreAuthError) {
+       console.log('🚫 Skipping token refresh - already retried or ignore auth error');
+       return Promise.reject(error);
+     }
     
     
     if (error.response && error.response.status === 401) {
@@ -56,17 +61,23 @@ axiosInstance.interceptors.response.use(
           console.log('Checking refresh token status');
           
           if (store.state.isRefreshingToken) {
-            console.log('Token refresh already in progress, waiting...');
+            console.log('🔄 Token refresh already in progress, waiting...');
             try {
               await store.state.refreshPromise;
-              console.log('Existing token refresh completed, retrying request');
+              console.log('🔄 Existing token refresh completed, retrying request');
               
               const newToken = localStorage.getItem('quiz_master_token');
-              originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+              if (newToken) {
+                originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+                console.log('🔄 Using refreshed token for retry:', newToken.substring(0, 20) + '...');
+              } else {
+                console.error('🔄 No token found after refresh, cannot retry');
+                return Promise.reject(error);
+              }
               
               return axiosInstance(originalRequest);
             } catch (err) {
-              console.error('Existing token refresh failed, cannot retry request');
+              console.error('🔄 Existing token refresh failed, cannot retry request');
               return Promise.reject(error);
             }
           }
@@ -88,7 +99,7 @@ axiosInstance.interceptors.response.use(
           const response = await refreshPromise;
           
           if (response.data && response.data.access_token) {
-            console.log('Token refresh successful:', response.data);
+            console.log('🔄 Token refresh successful:', response.data);
             
             const newToken = response.data.access_token;
             store.commit('SET_TOKEN', newToken);
@@ -97,17 +108,35 @@ axiosInstance.interceptors.response.use(
               store.commit('SET_REFRESH_TOKEN', response.data.refresh_token);
             }
             
-            axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
-            
-            originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
-            
-            store.commit('SET_TOKEN_REFRESHING', false);
-            
-            return axiosInstance(originalRequest);
-          } else {
-            store.commit('SET_TOKEN_REFRESHING', false);
-            throw new Error('Invalid token refresh response');
-          }
+                         // Update axios instance headers
+             axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+             
+             // Update the original request headers
+             originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+             
+             // Keep the retry flag to prevent infinite loops
+             // DO NOT clear originalRequest._retry
+             
+             store.commit('SET_TOKEN_REFRESHING', false);
+             
+             console.log('🔄 Retrying original request with new token:', originalRequest.url);
+             console.log('🔄 New token being used:', newToken.substring(0, 20) + '...');
+             
+                          // Retry the original request with new token
+             try {
+               const retryResponse = await axiosInstance(originalRequest);
+               console.log('✅ Retry successful with new token');
+               return retryResponse;
+             } catch (retryError) {
+               console.error('❌ Retry failed even with new token:', retryError.response?.status);
+               // If retry fails, don't try again - just reject
+               store.commit('SET_TOKEN_REFRESHING', false);
+               return Promise.reject(retryError);
+             }
+           } else {
+             store.commit('SET_TOKEN_REFRESHING', false);
+             throw new Error('Invalid token refresh response');
+           }
         } catch (refreshError) {
           store.commit('SET_TOKEN_REFRESHING', false);
           

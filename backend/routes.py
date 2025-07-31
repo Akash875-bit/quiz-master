@@ -1367,7 +1367,7 @@ def get_reports():
     subject_performance = db.session.query(
         Subject.name,
         db.func.avg(Score.score).label('avg_score'),
-        db.func.sum(db.case([(Score.passed, 1)], else_=0)) * 100.0 / db.func.count(Score.id).label('pass_rate')
+        (db.func.sum(db.case([(Score.passed, 1)], else_=0)) * 100.0 / db.func.count(Score.id)).label('pass_rate')
     ).join(Chapter, Subject.id == Chapter.subject_id)\
      .join(Quiz, Chapter.id == Quiz.chapter_id)\
      .join(Score, Quiz.id == Score.quiz_id)\

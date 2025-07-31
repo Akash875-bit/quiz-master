@@ -97,28 +97,12 @@ const closeUserDropdown = () => {
 
 
 onMounted(async () => {
-  const token = localStorage.getItem('quiz_master_token');
-  if (token) {
-    try {
-      console.log('Validating session with backend...');
-      
-      
-      await store.dispatch('validateSession');
-      
-      console.log('Session validated successfully');
-    } catch (err) {
-      console.error('Session validation error:', err);
-      
-      
-      localStorage.removeItem('quiz_master_token');
-      localStorage.removeItem('quiz_master_refresh_token');
-      localStorage.removeItem('quiz_master_user');
-      
-      console.log('Error during session validation, clearing auth state');
-    }
-  } else {
-    console.log('No token found, user is not authenticated');
-  }
+  // Clear any existing tokens to force fresh login
+  localStorage.removeItem('quiz_master_token');
+  localStorage.removeItem('quiz_master_refresh_token');
+  localStorage.removeItem('quiz_master_user');
+  
+  console.log('Cleared existing tokens, please log in again');
   
   // Add global click listener to close dropdown
   document.addEventListener('click', closeUserDropdown);
