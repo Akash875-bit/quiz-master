@@ -232,13 +232,23 @@ def check_auth():
 def get_subjects():
     subjects = Subject.query.all()
     
-    subjects_list = [{
-        'id': subject.id,
-        'name': subject.name,
-        'description': subject.description,
-        'image_url': subject.image_url,
-        'created_at': subject.created_at.isoformat()
-    } for subject in subjects]
+    subjects_list = []
+    for subject in subjects:
+        # Count chapters for this subject
+        chapters_count = Chapter.query.filter_by(subject_id=subject.id).count()
+        
+        # Count quizzes for this subject (through chapters)
+        quizzes_count = db.session.query(Quiz).join(Chapter).filter(Chapter.subject_id == subject.id).count()
+        
+        subjects_list.append({
+            'id': subject.id,
+            'name': subject.name,
+            'description': subject.description,
+            'image_url': subject.image_url,
+            'created_at': subject.created_at.isoformat(),
+            'chapters_count': chapters_count,
+            'quizzes_count': quizzes_count
+        })
     
     return jsonify(subjects_list), 200
 
