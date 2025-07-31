@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="500" height="400" viewBox="0 0 500 400">
+  <!-- Background -->
+  <rect x="0" y="0" width="500" height="400" fill="#f8f9fa" rx="10" />
+  
+  <!-- Step 1: Create Account -->
+  <circle cx="100" cy="80" r="30" fill="#4CAF50" fill-opacity="0.2" />
+  <text x="100" y="85" font-family="Arial, sans-serif" font-size="20" font-weight="bold" text-anchor="middle" fill="#4CAF50">1</text>
+  <rect x="150" y="50" width="300" height="60" rx="10" fill="white" stroke="#e9ecef" stroke-width="2" />
+  <text x="170" y="85" font-family="Arial, sans-serif" font-size="16" fill="#212529">Create your account</text>
+  <path d="M100,110 L100,145" stroke="#4CAF50" stroke-width="2" stroke-dasharray="4" />
+  
+  <!-- Step 2: Choose Subject -->
+  <circle cx="100" cy="175" r="30" fill="#007bff" fill-opacity="0.2" />
+  <text x="100" y="180" font-family="Arial, sans-serif" font-size="20" font-weight="bold" text-anchor="middle" fill="#007bff">2</text>
+  <rect x="150" y="145" width="300" height="60" rx="10" fill="white" stroke="#e9ecef" stroke-width="2" />
+  <text x="170" y="180" font-family="Arial, sans-serif" font-size="16" fill="#212529">Browse and select subjects</text>
+  <path d="M100,205 L100,240" stroke="#4CAF50" stroke-width="2" stroke-dasharray="4" />
+  
+  <!-- Step 3: Take Quiz -->
+  <circle cx="100" cy="270" r="30" fill="#ffc107" fill-opacity="0.2" />
+  <text x="100" y="275" font-family="Arial, sans-serif" font-size="20" font-weight="bold" text-anchor="middle" fill="#ffc107">3</text>
+  <rect x="150" y="240" width="300" height="60" rx="10" fill="white" stroke="#e9ecef" stroke-width="2" />
+  <text x="170" y="275" font-family="Arial, sans-serif" font-size="16" fill="#212529">Complete timed quizzes</text>
+  <path d="M100,300 L100,335" stroke="#4CAF50" stroke-width="2" stroke-dasharray="4" />
+  
+  <!-- Step 4: Track Progress -->
+  <circle cx="100" cy="365" r="30" fill="#dc3545" fill-opacity="0.2" />
+  <text x="100" y="370" font-family="Arial, sans-serif" font-size="20" font-weight="bold" text-anchor="middle" fill="#dc3545">4</text>
+  <rect x="150" y="335" width="300" height="60" rx="10" fill="white" stroke="#e9ecef" stroke-width="2" />
+  <text x="170" y="370" font-family="Arial, sans-serif" font-size="16" fill="#212529">Review results and track progress</text>
+  
+  <!-- Icons -->
+  <circle cx="420" cy="80" r="15" fill="#4CAF50" fill-opacity="0.2" />
+  <text x="420" y="85" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#4CAF50">✓</text>
+  
+  <rect x="410" y="170" width="20" height="20" fill="#007bff" fill-opacity="0.2" />
+  <text x="420" y="186" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#007bff">📚</text>
+  
+  <rect x="410" y="265" width="20" height="20" rx="10" fill="#ffc107" fill-opacity="0.2" />
+  <text x="420" y="281" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#ffc107">⏱️</text>
+  
+  <path d="M410,365 L420,350 L430,365 L420,380 Z" fill="#dc3545" fill-opacity="0.2" />
+  <text x="420" y="371" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#dc3545">📊</text>
+</svg> 
